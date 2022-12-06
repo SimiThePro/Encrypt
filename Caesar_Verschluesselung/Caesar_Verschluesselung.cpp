@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <conio.h>
 #include <vector>
+#include <algorithm>
 
 
 using namespace std;
@@ -12,15 +13,15 @@ using namespace std;
 const char* command = "dir .\\Dateien /b";
 string path = "Dateien/";
 
-#define SHOWDIR system(command)
+#define SHOWDIR cout << "{\n"; system(command);  cout << '}'
 #define CLEAR system("cls")
 
 struct Encrypt {
-public: 
+public:
     int key = 0;
     string DateinameZuVer = "";
     string DateinameVer = "";
-    
+
 };
 struct Decrypt
 {
@@ -31,8 +32,9 @@ public:
 };
 
 void Menu();
-void Verschluesseln(struct Encrypt &encrypt);
-void Entschluesseln(struct Decrypt &decrypt);
+void Verschluesseln(struct Encrypt& encrypt);
+void Entschluesseln(struct Decrypt& decrypt);
+void Bruteforce();
 
 int main()
 {
@@ -40,7 +42,7 @@ int main()
     struct Decrypt decrypt;
     string Eingabe, FileInput;
     int iEingabe = 0;
-    
+
 
     while (iEingabe != 4)
     {
@@ -81,7 +83,7 @@ void Menu() {
         "\n3.	Ende";
 }
 
-void Verschluesseln(struct Encrypt &encrypt) {
+void Verschluesseln(struct Encrypt& encrypt) {
     //Deklaration
 
     ifstream DateiZuVer;
@@ -193,7 +195,7 @@ void Verschluesseln(struct Encrypt &encrypt) {
                         }
 
                     }
-                    else if (LowerText[i] == '\n')
+                    else if (LowerText[i] == '\n' || LowerText[i] == ' ')
                     {
                         endlines++;
                         encryptedtext[i] = LowerText[i];
@@ -222,7 +224,7 @@ void Verschluesseln(struct Encrypt &encrypt) {
     }
 }
 
-void Entschluesseln(struct Decrypt &decrypt) {
+void Entschluesseln(struct Decrypt& decrypt) {
 
     ifstream DateiZuEnt;
     ofstream DateiEnt;
@@ -232,7 +234,7 @@ void Entschluesseln(struct Decrypt &decrypt) {
 
     while (Wahl != 5) {
         Wahl = 0;
-        
+
         CLEAR;
         cout <<
             "\n 1) Wahl des Schluessels \t\t\t(Momentan: " << decrypt.key << ")" <<
@@ -332,7 +334,7 @@ void Entschluesseln(struct Decrypt &decrypt) {
                     else
                         decryptedtext[i] = encryptedtext[i] - decrypt.key;
 
-                    if (encryptedtext[i] == '\n')
+                    if (encryptedtext[i] == '\n' || encryptedtext[i] == ' ')
                     {
                         endlines++;
                         decryptedtext[i] = encryptedtext[i];
@@ -362,18 +364,90 @@ void Entschluesseln(struct Decrypt &decrypt) {
 
 void Bruteforce() {
     ifstream DateiLesen;
+    ifstream DateiVerschlossen; string TextVerschluesselt;
     ofstream DateiSpeicher;
 
     string Eingabe;
-    string TextDatei = "", line;
+    string TextDatei = "", TextDateiLower, line;
+    vector<string> Texts;
+    vector<int> AnzahlE;
     vector<int> posAlphabet;
     vector<char> charAlphabet;
 
     cout << "Welche der Folgenden Dateien moechten Sie entschluesseln?\n";
     SHOWDIR;
 
-    while (!DateiLesen.is_open()) {
+    while (!DateiVerschlossen.is_open()) {
         getline(cin, Eingabe);
-        DateiLesen.open(path + Eingabe + ".txt");
+        DateiVerschlossen.open(path + Eingabe + ".txt");
+        if (!DateiVerschlossen.is_open())
+            cout << "Diese Datei ist nicht vorhanden!\n";
     }
+    while (getline(DateiVerschlossen, line)) {
+        TextVerschluesselt += line + '\n';
+    }
+
+    for (int key = 1; key < 11; key++)
+    {
+        string TextEntschluesselt(TextVerschluesselt.length(),' ');
+        for (int i = 0, endlines = 0; i < TextVerschluesselt.length() - endlines; i++) {
+
+            if ((TextVerschluesselt[i] >= 'a' && TextVerschluesselt[i] <= 'z') || (TextVerschluesselt[i] >= 'A' && TextVerschluesselt[i] <= 'Z')) {
+
+                if (TextVerschluesselt[i] >= 'a' && TextVerschluesselt[i] <= 'z')
+                {
+                    if (TextVerschluesselt[i] >= ('a') + key)
+                        TextEntschluesselt[i] = (TextVerschluesselt[i] - key);
+                    else TextEntschluesselt[i] = 'z' - (key - (TextVerschluesselt[i] % ('a')) - 1);
+                }
+                else {
+                    if (TextVerschluesselt[i] >= ('A') + key)
+                        TextEntschluesselt[i] = (TextVerschluesselt[i] - key);
+                    else TextEntschluesselt[i] = 'Z' - (key - (TextVerschluesselt[i] % ('A')) - 1);
+                }
+
+            }
+            else
+                TextEntschluesselt[i] = TextVerschluesselt[i] - key;
+
+            if (TextVerschluesselt[i] == '\n' || TextVerschluesselt[i] == ' ')
+            {
+                endlines++;
+                TextEntschluesselt[i] = TextVerschluesselt[i];
+            }
+
+        }
+        Texts.push_back(TextEntschluesselt);
+
+        
+        for (int i = 0; i < TextEntschluesselt.length(); i++) {
+            if (TextEntschluesselt[i] <= 'Z' || TextEntschluesselt[i] >= 'A')
+                TextEntschluesselt[i] = tolower(TextEntschluesselt[i]);
+            if (find(charAlphabet.begin(), charAlphabet.end(), TextEntschluesselt[i]) != charAlphabet.end()) {
+
+                auto pos = distance(charAlphabet.begin(), find(charAlphabet.begin(), charAlphabet.end(), TextEntschluesselt[i]));
+                posAlphabet.at(pos)++;
+
+            }
+            else {
+                charAlphabet.push_back(TextEntschluesselt[i]);
+                posAlphabet.push_back(1);
+            }
+        }
+
+        AnzahlE.push_back(posAlphabet.at(distance(charAlphabet.begin(), find(charAlphabet.begin(), charAlphabet.end(), 'e'))));
+        
+        TextDateiLower += line + '\n';
+        charAlphabet.clear();
+        posAlphabet.clear();
+
+    }
+
+    
+    cout <<endl << TextDateiLower << endl << TextDatei ;
+    system("pause");
+
+
+
+
 }
