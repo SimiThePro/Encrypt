@@ -10,12 +10,13 @@
 
 using namespace std;
 
-const char* command = "dir .\\Dateien /b";
-string path = "Dateien/";
+const char* command = "dir .\\Dateien /b"; 
+string path = "Dateien/"; //Dateien werden in Ordner namens "Dateien" gespeichert
 
 #define SHOWDIR cout << "{\n"; system(command);  cout << '}'
 #define CLEAR system("cls")
 
+//Variablen für Verschlüsselung
 struct Encrypt {
 public:
     int key = 0;
@@ -23,6 +24,7 @@ public:
     string DateinameVer = "";
 
 };
+//Variablen für Entschlüsselung
 struct Decrypt
 {
 public:
@@ -35,6 +37,7 @@ void Menu();
 void Verschluesseln(struct Encrypt& encrypt);
 void Entschluesseln(struct Decrypt& decrypt);
 void Bruteforce();
+void Sort(vector<int> AnzahlE, vector<int> &IndexList);
 
 int main()
 {
@@ -370,7 +373,7 @@ void Bruteforce() {
     string Eingabe;
     string TextDatei = "", TextDateiLower, line;
     vector<string> Texts;
-    vector<int> AnzahlE;
+    vector<int> AnzahlE, IndexAnzahlE;
     vector<int> posAlphabet;
     vector<char> charAlphabet;
 
@@ -387,7 +390,7 @@ void Bruteforce() {
         TextVerschluesselt += line + '\n';
     }
 
-    for (int key = 1; key < 11; key++)
+    for (int key = 1; key < 26; key++)
     {
         string TextEntschluesselt(TextVerschluesselt.length(),' ');
         for (int i = 0, endlines = 0; i < TextVerschluesselt.length() - endlines; i++) {
@@ -434,8 +437,13 @@ void Bruteforce() {
                 posAlphabet.push_back(1);
             }
         }
-
-        AnzahlE.push_back(posAlphabet.at(distance(charAlphabet.begin(), find(charAlphabet.begin(), charAlphabet.end(), 'e'))));
+        if (find(charAlphabet.begin(), charAlphabet.end(), 'e') != charAlphabet.end()) {
+            auto pos = distance(charAlphabet.begin(), find(charAlphabet.begin(), charAlphabet.end(), 'e'));
+            AnzahlE.push_back(posAlphabet.at(pos));
+        }
+        else
+            AnzahlE.push_back(0);
+        
         
         TextDateiLower += line + '\n';
         charAlphabet.clear();
@@ -444,10 +452,45 @@ void Bruteforce() {
     }
 
     
-    cout <<endl << TextDateiLower << endl << TextDatei ;
+    /*for (int i = 0; i < Texts.size(); i++) {
+        cout << Texts.at(i) << "\n";
+    }*/
+    Sort(AnzahlE, IndexAnzahlE);
+    string Text;
+    for (int i = 0; Eingabe != "j"; i++) {
+        Text = Texts.at(IndexAnzahlE.at(i));
+        CLEAR;
+        cout << "Sieh dieser Text für Sie richtig aus? (j|y fuer ja)" << endl <<
+            Text.substr(0,25) << endl << ">>";
+        getline(cin, Eingabe);
+        if (Eingabe == "j") {
+            break;
+        }
+    }
+
+    SHOWDIR;
+    ofstream DateiVer;
+    string DateiName;
+    while (!DateiVer.is_open()) {
+        cout << "In welcher Datei moechten sie den Text speichern?" << endl;
+        getline(cin, DateiName);
+        DateiVer.open(path + DateiName + ".txt");
+        if (!DateiVer.is_open())cout << "unable to open file!";
+    }
+    DateiVer << Text;
+    cout << "Der Text wurde erfolgreich in " << DateiName << ".txt gespeichert";
+
     system("pause");
+}
 
 
+void Sort(vector<int> AnzahlE, vector<int> &IndexList) {
+    int max;
 
-
+    for (int i = 0; i < AnzahlE.size(); i++) {
+        max = *max_element(AnzahlE.begin(), AnzahlE.end());
+        auto pos = distance(AnzahlE.begin(), find(AnzahlE.begin(), AnzahlE.end(), max));
+        IndexList.push_back(pos);
+        AnzahlE.at(pos) = -1;
+    }
 }
