@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const char* command = "dir .\\Dateien /b"; 
+const char* command = "dir .\\Dateien /b";
 string path = "Dateien/"; //Dateien werden in Ordner namens "Dateien" gespeichert
 
 #define SHOWDIR cout << "{\n"; system(command);  cout << '}'
@@ -37,7 +37,7 @@ void Menu();
 void Verschluesseln(struct Encrypt& encrypt);
 void Entschluesseln(struct Decrypt& decrypt);
 void Bruteforce();
-void Sort(vector<int> AnzahlE, vector<int> &IndexList);
+void Sort(vector<int> AnzahlE, vector<int>& IndexList);
 
 int main()
 {
@@ -180,17 +180,16 @@ void Verschluesseln(struct Encrypt& encrypt) {
 
 
                 string encryptedtext(LowerText.length(), ' ');
-
                 for (int i = 0, endlines = 0; i < LowerText.length() - endlines; i++) {
                     if ((LowerText[i] >= 'A' && LowerText[i] <= 'Z') || (LowerText[i] >= 'a' && LowerText[i] <= 'z'))
                     {
-                        if (LowerText[i] >= 'A' && LowerText[i] <= 'Z')
+                        if (isupper(LowerText[i]))
                         {
                             if (LowerText[i] <= ('Z') - encrypt.key)
                                 encryptedtext[i] = (LowerText[i] + encrypt.key);
                             else encryptedtext[i] = ((LowerText[i] % ('Z' - encrypt.key)) + 'A' - 1);
                         }
-                        else
+                        else if (islower(LowerText[i]))
                         {
                             if (LowerText[i] <= ('z') - encrypt.key)
                                 encryptedtext[i] = (LowerText[i] + encrypt.key);
@@ -198,12 +197,10 @@ void Verschluesseln(struct Encrypt& encrypt) {
                         }
 
                     }
-                    else if (LowerText[i] == '\n' || LowerText[i] == ' ')
+                    else
                     {
-                        endlines++;
                         encryptedtext[i] = LowerText[i];
                     }
-                    else encryptedtext[i] = LowerText[i] + encrypt.key;
 
                 }
                 DateiVer.open(path + encrypt.DateinameVer + ".txt");
@@ -321,7 +318,7 @@ void Entschluesseln(struct Decrypt& decrypt) {
 
                     if ((encryptedtext[i] >= 'a' && encryptedtext[i] <= 'z') || (encryptedtext[i] >= 'A' && encryptedtext[i] <= 'Z')) {
 
-                        if (encryptedtext[i] >= 'a' && encryptedtext[i] <= 'z')
+                        if (islower(encryptedtext[i]))
                         {
                             if (encryptedtext[i] >= ('a') + decrypt.key)
                                 decryptedtext[i] = (encryptedtext[i] - decrypt.key);
@@ -334,12 +331,8 @@ void Entschluesseln(struct Decrypt& decrypt) {
                         }
 
                     }
-                    else
-                        decryptedtext[i] = encryptedtext[i] - decrypt.key;
-
-                    if (encryptedtext[i] == '\n' || encryptedtext[i] == ' ')
+                    else 
                     {
-                        endlines++;
                         decryptedtext[i] = encryptedtext[i];
                     }
 
@@ -392,37 +385,32 @@ void Bruteforce() {
 
     for (int key = 1; key < 26; key++)
     {
-        string TextEntschluesselt(TextVerschluesselt.length(),' ');
+        string TextEntschluesselt(TextVerschluesselt.length(), ' ');
         for (int i = 0, endlines = 0; i < TextVerschluesselt.length() - endlines; i++) {
 
             if ((TextVerschluesselt[i] >= 'a' && TextVerschluesselt[i] <= 'z') || (TextVerschluesselt[i] >= 'A' && TextVerschluesselt[i] <= 'Z')) {
 
-                if (TextVerschluesselt[i] >= 'a' && TextVerschluesselt[i] <= 'z')
+                if (islower(TextVerschluesselt[i]))
                 {
                     if (TextVerschluesselt[i] >= ('a') + key)
                         TextEntschluesselt[i] = (TextVerschluesselt[i] - key);
                     else TextEntschluesselt[i] = 'z' - (key - (TextVerschluesselt[i] % ('a')) - 1);
                 }
-                else {
+                else if (isupper(TextVerschluesselt[i])) {
                     if (TextVerschluesselt[i] >= ('A') + key)
                         TextEntschluesselt[i] = (TextVerschluesselt[i] - key);
                     else TextEntschluesselt[i] = 'Z' - (key - (TextVerschluesselt[i] % ('A')) - 1);
                 }
 
             }
-            else
-                TextEntschluesselt[i] = TextVerschluesselt[i] - key;
-
-            if (TextVerschluesselt[i] == '\n' || TextVerschluesselt[i] == ' ')
-            {
-                endlines++;
+            else{
                 TextEntschluesselt[i] = TextVerschluesselt[i];
             }
 
         }
         Texts.push_back(TextEntschluesselt);
 
-        
+
         for (int i = 0; i < TextEntschluesselt.length(); i++) {
             if (TextEntschluesselt[i] <= 'Z' || TextEntschluesselt[i] >= 'A')
                 TextEntschluesselt[i] = tolower(TextEntschluesselt[i]);
@@ -443,15 +431,15 @@ void Bruteforce() {
         }
         else
             AnzahlE.push_back(0);
-        
-        
+
+
         TextDateiLower += line + '\n';
         charAlphabet.clear();
         posAlphabet.clear();
 
     }
 
-    
+
     /*for (int i = 0; i < Texts.size(); i++) {
         cout << Texts.at(i) << "\n";
     }*/
@@ -461,7 +449,7 @@ void Bruteforce() {
         Text = Texts.at(IndexAnzahlE.at(i));
         CLEAR;
         cout << "Sieh dieser Text für Sie richtig aus? (j|y fuer ja)" << endl <<
-            Text.substr(0,25) << endl << ">>";
+            Text.substr(0, 25) << endl << ">>";
         getline(cin, Eingabe);
         if (Eingabe == "j") {
             break;
@@ -484,7 +472,7 @@ void Bruteforce() {
 }
 
 
-void Sort(vector<int> AnzahlE, vector<int> &IndexList) {
+void Sort(vector<int> AnzahlE, vector<int>& IndexList) {
     int max;
 
     for (int i = 0; i < AnzahlE.size(); i++) {
